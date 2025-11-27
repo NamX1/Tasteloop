@@ -261,77 +261,100 @@
                 tiktok: "https://tiktok.com"
             }
         ];
+        // 2. FUNGSI RENDER (Sekarang menerima parameter data)
+    // Default-nya menampilkan semua database jika tidak ada parameter
+    function renderContent(data = database) {
+        const container = document.getElementById('grid-result');
+        let htmlContent = '';
 
-        // 2. FUNGSI RENDER (Membuat HTML dari Data)
-        function renderContent() {
-            const container = document.getElementById('grid-result');
-            let htmlContent = '';
+        if(data.length === 0) {
+            container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#888;">Yah, makanan yang kamu cari tidak ketemu :(</p>';
+            return;
+        }
 
-            database.forEach(item => {
-                htmlContent += `
-                    <div class="card">
-                        <div class="card-image-wrapper">
-                            <span class="card-badge">${item.category}</span>
-                            <img src="${item.image}" alt="${item.name}" class="card-img">
+        data.forEach(item => {
+            htmlContent += `
+                <div class="card">
+                    <div class="card-image-wrapper">
+                        <span class="card-badge">${item.category}</span>
+                        <img src="${item.image}" alt="${item.name}" class="card-img">
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="card-title">${item.name}</div>
+                        
+                        <div class="card-location">
+                            <i class="fa-solid fa-location-dot" style="color:#ff2d55"></i> 
+                            ${item.location}
+                        </div>
+
+                        <div class="rating-box">
+                            <i class="fa-solid fa-star"></i> ${item.rating}
                         </div>
                         
-                        <div class="card-body">
-                            <div class="card-title">${item.name}</div>
-                            
-                            <div class="card-location">
-                                <i class="fa-solid fa-location-dot" style="color:#ff2d55"></i> 
-                                ${item.location}
-                            </div>
-
-                            <div class="rating-box">
-                                <i class="fa-solid fa-star"></i> ${item.rating}
-                            </div>
-                            
-                            <div class="action-row">
-                                <span class="price-est">${item.price} • <span style="color:#2ecc71">Open</span></span>
-                                <a href="${item.tiktok}" target="_blank" class="tiktok-btn">
-                                    <i class="fa-brands fa-tiktok"></i> Review
-                                </a>
-                            </div>
+                        <div class="action-row">
+                            <span class="price-est">${item.price} • <span style="color:#2ecc71">Open</span></span>
+                            <a href="${item.tiktok}" target="_blank" class="tiktok-btn">
+                                <i class="fa-brands fa-tiktok"></i> Review
+                            </a>
                         </div>
                     </div>
-                `;
-            });
-
-            container.innerHTML = htmlContent;
-        }
-
-        // 3. FUNGSI ENTRANCE (Pintu Masuk)
-        function enterSite() {
-            const entrance = document.getElementById('entrance-screen');
-            
-            // Animasi Fade Out
-            entrance.style.opacity = '0';
-            entrance.style.visibility = 'hidden';
-            
-            // Render Konten setelah animasi mulai
-            setTimeout(() => {
-                renderContent();
-            }, 200);
-        }
-
-        // Bonus: Search Functionality Simple
-        document.querySelector('.search-input').addEventListener('keyup', function(e) {
-            const term = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.card');
-            
-            cards.forEach(card => {
-                const title = card.querySelector('.card-title').textContent.toLowerCase();
-                const cat = card.querySelector('.card-badge').textContent.toLowerCase();
-                
-                if(title.includes(term) || cat.includes(term)) {
-                    card.style.display = "block";
-                } else {
-                    card.style.display = "none";
-                }
-            });
+                </div>
+            `;
         });
 
-    </script>
+        container.innerHTML = htmlContent;
+    }
+
+    // 3. FUNGSI FILTER KATEGORI (BARU!)
+    const categoryChips = document.querySelectorAll('.cat-chip');
+
+    categoryChips.forEach(chip => {
+        chip.addEventListener('click', function() {
+            // A. Hapus kelas 'active' dari semua chip
+            categoryChips.forEach(c => c.classList.remove('active'));
+            // B. Tambahkan kelas 'active' ke chip yang diklik
+            this.classList.add('active');
+
+            const category = this.innerText.trim(); // Ambil teks kategori (misal: "Coffee")
+
+            if (category.includes("All")) {
+                // Jika klik "All", tampilkan semua
+                renderContent(database);
+            } else {
+                // Filter database berdasarkan kategori
+                // Kita pakai 'includes' biar teks "Coffee" cocok dengan ikonnya
+                const filteredData = database.filter(item => 
+                    // Cek apakah teks chip mengandung nama kategori item
+                    category.includes(item.category)
+                );
+                renderContent(filteredData);
+            }
+        });
+    });
+
+    // 4. FUNGSI SEARCH (Diperbarui agar lebih akurat)
+    document.querySelector('.search-input').addEventListener('keyup', function(e) {
+        const term = e.target.value.toLowerCase();
+        
+        const filteredData = database.filter(item => {
+            return item.name.toLowerCase().includes(term) || 
+                   item.category.toLowerCase().includes(term);
+        });
+
+        renderContent(filteredData);
+    });
+
+    // 5. FUNGSI ENTRANCE
+    function enterSite() {
+        const entrance = document.getElementById('entrance-screen');
+        entrance.style.opacity = '0';
+        entrance.style.visibility = 'hidden';
+        
+        setTimeout(() => {
+            renderContent(); // Render awal
+        }, 200);
+    }
+</script>
 </body>
 </html>
